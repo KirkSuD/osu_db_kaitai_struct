@@ -2,6 +2,7 @@
 
 from osu_db import OsuDb
 from osu_collection import OsuCollection
+from osu_scores import OsuScores
 from vlq_base128_le import VlqBase128Le
 
 if __name__ == "__main__":
@@ -36,6 +37,16 @@ if __name__ == "__main__":
     collection_serialized = pjoin(output_serialized_path, "collection.db")
     scores_serialized = pjoin(output_serialized_path, "scores.db")
 
+##    def trans(s):
+##        t, d = s.strip().split(" \t", maxsplit=1)
+##        print("- id:", d)
+##        print("  type:", {"String": "string", "Short": "s2", "Boolean": "bool", "Long": "s8", "Byte": "s1", "Int": "s4", "Double": "f8"}[t])
+##        print("  doc:", t+",", d)
+##    while True:
+##        s=input("")
+##        if s: trans(s)
+##        else: break
+    
     input("Press ENTER...")
 
     st = time.time()
@@ -48,4 +59,10 @@ if __name__ == "__main__":
     print(collection_data.version)
     print("Parsed collection.db in", time.time()-st, "sec")
 
-    
+    st = time.time()
+    scores_data = OsuScores.from_file(scores_db_path)
+    print(scores_data.version)
+    print("Parsed scores.db in", time.time()-st, "sec")
+
+
+
