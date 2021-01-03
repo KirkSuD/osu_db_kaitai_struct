@@ -1,0 +1,187 @@
+osu!.db format according to https://osu.ppy.sh/help/wiki/osu!_File_Formats/Db_(file_format)
+
+data types:
+
+"Boolean": ## False if 0x00 else True
+"Byte": ## 1 byte int
+"DateTime": ## 8 bytes signed int
+"Double": ## 8 bytes floating point
+"Int": ## 4 bytes unsigned int
+"Int-Double pair": ## 0x08-Int-0x0d-Double with AssertionError
+"Int-Double pair*": ## int(n) - "Int-Double pair"*n
+"Long": ## 8 bytes unsigned int
+"Short": ## 2 bytes unsigned int
+"Single": ## 4 bytes floating point
+"String": ## 0x00 or 0x0b - ULE128(n) - UTF-8(length=n)
+"ULEB128": ## https://en.wikipedia.org/wiki/LEB128#Decode_unsigned_integer
+"Timing point": ## Double - Double - Boolean
+"Timing point+": ## int(n) - "Timing point"*n
+else: NotImplementedError
+
+
+osu!.db format:
+
+[['Int', 'osu! version (e.g. 20150203)'],
+ ['Int', 'Folder Count'],
+ ['Bool',
+  'AccountUnlocked (only false when the account is locked or banned in any '
+  'way)'],
+ ['DateTime', 'Date the account will be unlocked'],
+ ['String', 'Player name'],
+ ['Int', 'Number of beatmaps'],
+ ['Beatmaps*', 'Aforementioned beatmaps'],
+ ['Int', 'Unknown Int, always seems to be 4']]
+
+['Int', 'Int', 'Bool', 'DateTime', 'String', 'Int', 'Beatmaps*', 'Int']
+
+Beatmaps format
+
+[['Int', 'Size in bytes of the beatmap entry'],
+ ['String', 'Artist name'],
+ ['String', 'Artist name, in Unicode'],
+ ['String', 'Song title'],
+ ['String', 'Song title, in Unicode'],
+ ['String', 'Creator name'],
+ ['String', 'Difficulty (e.g. Hard, Insane, etc.)'],
+ ['String', 'Audio file name'],
+ ['String', 'MD5 hash of the beatmap'],
+ ['String', 'Name of the .osu file corresponding to this beatmap'],
+ ['Byte',
+  'Ranked status (0 = unknown, 1 = unsubmitted, 2 = pending/wip/graveyard, 3 = '
+  'unused, 4 = ranked, 5 = approved, 6 = qualified, 7 = loved)'],
+ ['Short', 'Number of hitcircles'],
+ ['Short', 'Number of sliders (note: this will be present in every mode)'],
+ ['Short', 'Number of spinners (note: this will be present in every mode)'],
+ ['Long', 'Last modification time, Windows ticks.'],
+ ['Byte/Single',
+  'Approach rate. Byte if the version is less than 20140609, Single '
+  'otherwise.'],
+ ['Byte/Single',
+  'Circle size. Byte if the version is less than 20140609, Single otherwise.'],
+ ['Byte/Single',
+  'HP drain. Byte if the version is less than 20140609, Single otherwise.'],
+ ['Byte/Single',
+  'Overall difficulty. Byte if the version is less than 20140609, Single '
+  'otherwise.'],
+ ['Double', 'Slider velocity'],
+ ['Int-Double pair*',
+  'An Int indicating the number of following Int-Double pairs, then the '
+  'aforementioned pairs. Star Rating info for osu! standard, in each pair, the '
+  'Int is the mod combination, and the Double is the Star Rating. Only present '
+  'if version is greater than or equal to 20140609.'],
+ ['Int-Double pair*',
+  'An Int indicating the number of following Int-Double pairs, then the '
+  'aforementioned pairs. Star Rating info for Taiko, in each pair, the Int is '
+  'the mod combination, and the Double is the Star Rating. Only present if '
+  'version is greater than or equal to 20140609.'],
+ ['Int-Double pair*',
+  'An Int indicating the number of following Int-Double pairs, then the '
+  'aforementioned pairs. Star Rating info for CTB, in each pair, the Int is '
+  'the mod combination, and the Double is the Star Rating. Only present if '
+  'version is greater than or equal to 20140609.'],
+ ['Int-Double pair*',
+  'An Int indicating the number of following Int-Double pairs, then the '
+  'aforementioned pairs. Star Rating info for osu!mania, in each pair, the Int '
+  'is the mod combination, and the Double is the Star Rating. Only present if '
+  'version is greater than or equal to 20140609.'],
+ ['Int', 'Drain time, in seconds'],
+ ['Int', 'Total time, in milliseconds'],
+ ['Int',
+  'Time when the audio preview when hovering over a beatmap in beatmap select '
+  'starts, in milliseconds.'],
+ ['Timing point+',
+  'An Int indicating the number of following Timing points, then the '
+  'aforementioned Timing points.'],
+ ['Int', 'Beatmap ID'],
+ ['Int', 'Beatmap set ID'],
+ ['Int', 'Thread ID'],
+ ['Byte', 'Grade achieved in osu! standard.'],
+ ['Byte', 'Grade achieved in Taiko.'],
+ ['Byte', 'Grade achieved in CTB.'],
+ ['Byte', 'Grade achieved in osu!mania.'],
+ ['Short', 'Local beatmap offset'],
+ ['Single', 'Stack leniency'],
+ ['Byte',
+  'Osu gameplay mode. 0x00 = osu!Standard, 0x01 = Taiko, 0x02 = CTB, 0x03 = '
+  'Mania'],
+ ['String', 'Song source'],
+ ['String', 'Song tags'],
+ ['Short', 'Online offset'],
+ ['String', 'Font used for the title of the song'],
+ ['Boolean', 'Is beatmap unplayed'],
+ ['Long', 'Last time when beatmap was played'],
+ ['Boolean', 'Is the beatmap osz2'],
+ ['String', 'Folder name of the beatmap, relative to Songs folder'],
+ ['Long', 'Last time when beatmap was checked against osu! repository'],
+ ['Boolean', 'Ignore beatmap sound'],
+ ['Boolean', 'Ignore beatmap skin'],
+ ['Boolean', 'Disable storyboard'],
+ ['Boolean', 'Disable video'],
+ ['Boolean', 'Visual override'],
+ ['Short?', 'Unknown. Only present if version is less than 20140609.'],
+ ['Int', 'Last modification time (?)'],
+ ['Byte', 'Mania scroll speed']]
+
+['Int', 'String', 'String', 'String', 'String', 'String', 'String', 'String', 'String', 'String', 'Byte', 'Short', 'Short', 'Short', 'Long', 'Byte/Single', 'Byte/Single', 'Byte/Single', 'Byte/Single', 'Double', 'Int-Double pair*', 'Int-Double pair*', 'Int-Double pair*', 'Int-Double pair*', 'Int', 'Int', 'Int', 'Timing point+', 'Int', 'Int', 'Int', 'Byte', 'Byte', 'Byte', 'Byte', 'Short', 'Single', 'Byte', 'String', 'String', 'Short', 'String', 'Boolean', 'Long', 'Boolean', 'String', 'Long', 'Boolean', 'Boolean', 'Boolean', 'Boolean', 'Boolean', 'Short?', 'Int', 'Byte']
+
+collection.db format:
+
+[['Int', 'Version (e.g. 20150203)'],
+ ['Int', 'Number of collections']]
+
+['Int', 'Int']
+
+Collections format:
+
+[['String', 'Name of the collection'],
+ ['Int', 'Number of beatmaps in the collection'],
+ ['String*',
+  'Beatmap MD5 hash. Repeated for as many beatmaps as are in the collection.']]
+
+['String', 'Int', 'String*']
+
+score.db format:
+
+[['Int', 'Version (e.g. 20150204)'],
+ ['Int', 'Number of beatmaps'],
+ ['Beatmaps*', 'Aforementioned beatmaps']]
+
+['Int', 'Int', 'Beatmaps*']
+
+Beatmaps format:
+
+[['String', 'Beatmap MD5 hash'],
+ ['Int', 'Number of scores on this beatmap'],
+ ['Score*', 'Aforementioned scores']]
+
+['String', 'Int', 'Score*']
+
+Scores format:
+
+[['Byte',
+  'osu! gameplay mode (0x00 = osu!Standard, 0x01 = Taiko, 0x02 = CTB, 0x03 = '
+  'Mania)'],
+ ['Int', 'Version of this score/replay (e.g. 20150203)'],
+ ['String', 'Beatmap MD5 hash'],
+ ['String', 'Player name'],
+ ['String', 'Replay MD5 hash'],
+ ['Short', "Number of 300's"],
+ ['Short',
+  "Number of 100's in osu!Standard, 150's in Taiko, 100's in CTB, 200's in "
+  'Mania'],
+ ['Short', "Number of 50's in osu!Standard, small fruit in CTB, 50's in Mania"],
+ ['Short', "Number of Gekis in osu!Standard, Max 300's in Mania"],
+ ['Short', "Number of Katus in osu!Standard, 100's in Mania"],
+ ['Short', 'Number of misses'],
+ ['Int', 'Replay score'],
+ ['Short', 'Max Combo'],
+ ['Boolean', 'Perfect combo'],
+ ['Int',
+  'Bitwise combination of mods used. See Osr (file format) for more '
+  'information.'],
+ ['String', 'Should always be empty'],
+ ['Long', 'Timestamp of replay, in Windows ticks'],
+ ['Int', 'Should always be 0xffffffff (-1).'],
+ ['Long', 'Online Score ID']]
+
+['Byte', 'Int', 'String', 'String', 'String', 'Short', 'Short', 'Short', 'Short', 'Short', 'Short', 'Int', 'Short', 'Boolean', 'Int', 'String', 'Long', 'Int', 'Long']
