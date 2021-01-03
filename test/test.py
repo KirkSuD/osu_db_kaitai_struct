@@ -1,6 +1,7 @@
 #-*-coding:utf-8;-*-
 
 from osu_db import OsuDb
+from osu_collection import OsuCollection
 from vlq_base128_le import VlqBase128Le
 
 if __name__ == "__main__":
@@ -38,9 +39,13 @@ if __name__ == "__main__":
     input("Press ENTER...")
 
     st = time.time()
-    res = OsuDb.from_file(osu_db_path)
-    print(res.osu_version)
-    
-    print("Parsed osu!.db", time.time()-st)
+    osu_data = OsuDb.from_file(osu_db_path)
+    print(osu_data.osu_version)
+    print("Parsed osu!.db in", time.time()-st, "sec")
+
+    st = time.time()
+    collection_data = OsuCollection.from_file(collection_db_path)
+    print(collection_data.version)
+    print("Parsed collection.db in", time.time()-st, "sec")
 
     
