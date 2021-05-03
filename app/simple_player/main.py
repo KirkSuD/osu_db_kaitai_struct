@@ -124,8 +124,9 @@ if __name__ == "__main__":
     osudb_js_path = r"./user_data/osudb.js"
     pls_path = r"./user_data/osu_music.pls" ## the common .pls playlist format
     pls_collection_name = r"FavoriteMusic" ## the osu collection to be converted, None/False/""/0 to skip
+    pls_shuffle = True
 
-    import os, shutil, json, datetime
+    import os, shutil, json, datetime, random
 
     pjoin = os.path.join ## shortcut
 
@@ -205,6 +206,8 @@ if __name__ == "__main__":
         print()
         print("Dump collection to pls to osu_music.pls...")
         songs = get_songs_from_md5(get_md5_to_song_dict(osu_data.beatmaps), pls_col[0].beatmaps_md5s)
+        if pls_shuffle:
+            random.shuffle(songs)
         with PLSWriter(pls_path, "w", encoding="utf-8", pretty_blank=True) as pls:
             for song in songs:
                 full_path = f'{osu_songs_path}/{song["folder"]}/{song["file"]}'
