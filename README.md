@@ -5,15 +5,15 @@ A simple [osu!](https://osu.ppy.sh) parser written in [Kaitai Struct](https://ka
 Version: 0.1  
 Written by: KirkSuD  
 Project started @ 2021/01/03  
-Last update @ 2021/01/04  
+Last update @ 2021/05/04  
 Current found bugs: None
 
 It is written according to [the osu! wiki page](https://osu.ppy.sh/help/wiki/osu!_File_Formats/Db_(file_format)).  
 Currently, there are 4 databases: osu!.db, scores.db, collection.db, and presence.db.  
 But presence.db is not described on the wiki page and is not supported.
 
-Last test: Roughly tested @ 2021/01/04
- with osu!.db ver.20201229, collection.db ver.20200724, scores.db ver.20190828.
+Last test: Roughly tested @ 2021/05/04
+ with osu!.db ver.20210423, collection.db ver.20210423, scores.db ver.20190828.
 
 osu! directory path:  
 Windows: %localappdata%/osu!  
@@ -23,6 +23,14 @@ Mac OSX: /Applications/osu!.app/Contents/Resources/drive_c/Program Files/osu!/
 
 * None. Download latest release from the release folder. Then pick the language you like! :)
 * Oh. But you may still have to install Kaitai runtime for your chosen language.
+
+## Apps
+
+### Simple player
+
+A very simple html music player using Python to convert db to js.
+
+It can also convert a collection to a .pls playlist file, playable by many music players.
 
 ## How to use
 
@@ -52,11 +60,6 @@ True
 ## How it works
 
 Write binary format in Kaitai's `.ksy` file, then transpile to real programming languages.
-
-## Related projects
-
-* [osudb](https://github.com/KirkSuD/osudb) is able to parse and serialize osu! databases.
-* [OsuMusicPlayer](https://github.com/KirkSuD/OsuMusicPlayer) parses osu! databases and play music for you!
 
 ## TODO
 

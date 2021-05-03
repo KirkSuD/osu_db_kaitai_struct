@@ -6,8 +6,8 @@ OsuMusicPlayer - A music player for osu!, parse osu!.db, collection.db,
 Use the Kaitai Struct osu db parser.
 
 Version 0.0
-Roughly tested @ 2019/08/22
-with osu!.db ver.20190816, collection.db ver.20190808.
+Roughly tested @ 2021/05/04
+with osu!.db ver.20210423, collection.db ver.20210423.
 
 osu! directory path:
 Windows: %localappdata%/osu!
@@ -26,7 +26,8 @@ def get_song_from_beatmap(beatmap):
         "artist": beatmap.artist_name.value,
         "title": beatmap.song_title.value,
         "file": beatmap.audio_file_name.value,
-        "folder": beatmap.folder_name.value
+        "folder": beatmap.folder_name.value,
+        "time": beatmap.total_time
     }
 
 def get_songs(beatmaps):
@@ -42,7 +43,7 @@ def get_songs(beatmaps):
         res.append(get_song_from_beatmap(bm))
     return res
 
-def generate_md5_to_song_dict(beatmaps):
+def get_md5_to_song_dict(beatmaps):
     """
     Generate a dict from md5 to song with duplications.
     Used by md5_to_song_dict of get_songs_from_md5().
@@ -50,7 +51,7 @@ def generate_md5_to_song_dict(beatmaps):
     res = {}
     for bm in beatmaps:
         if bm.md5_hash.value in res:
-            raise ValueError("generate_md5_to_song_dict(beatmaps): md5 collision: " + bm.md5_hash)
+            raise ValueError("get_md5_to_song_dict(beatmaps): md5 collision: " + bm.md5_hash)
         res[bm.md5_hash.value] = get_song_from_beatmap(bm)
     return res
 
@@ -72,7 +73,7 @@ def get_collections(beatmaps, collections):
     """
     Convert collections md5 to song.
     """
-    md5_to_songs = generate_md5_to_song_dict(beatmaps)
+    md5_to_songs = get_md5_to_song_dict(beatmaps)
     return [[col.name.value, get_songs_from_md5(md5_to_songs, col.beatmaps_md5s)] for col in collections]
 
 def get_current_time():
@@ -83,10 +84,46 @@ def get_time_str(t=None):
         t = get_current_time()
     return t.strftime("%Y/%m/%d-%H:%M:%S")
 
+class PLSWriter:
+    def __init__(self, *args, pretty_blank=False, **kwargs):
+        self.file = open(*args, **kwargs)
+        self.pretty_blank = pretty_blank
+        self.num_entries = 0
+    
+    def write(self, file, title=None, length=None):
+        if self.num_entries == 0:
+            self.file.write("[playlist]\n")
+            self._write_blank()
+        
+        self.num_entries += 1
+        self.file.write("File%d=%s\n" % (self.num_entries, file))
+        if title is not None:
+            self.file.write("Title%d=%s\n" % (self.num_entries, title))
+        if length is not None:
+            self.file.write("Length%d=%s\n" % (self.num_entries, length))
+        self._write_blank()
+    
+    def _write_blank(self):
+        if self.pretty_blank:
+            self.file.write("\n")
+
+    def close(self):
+        self.file.write("NumberOfEntries=%d\n" % self.num_entries)
+        self.file.write("Version=2\n")
+        self.file.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
 if __name__ == "__main__":
     osu_root_path = r"%localappdata%/osu!"
     copy_db_path = r"./user_data/copied_osu_db"
     osudb_js_path = r"./user_data/osudb.js"
+    pls_path = r"./user_data/osu_music.pls" ## the common .pls playlist format
+    pls_collection_name = r"FavoriteMusic" ## the osu collection to be converted, None/False/""/0 to skip
 
     import os, shutil, json, datetime
 
@@ -154,13 +191,24 @@ if __name__ == "__main__":
         print("No MD5 collision found.")
 
     print()
-    print("Dump to json to osudb.js...")
-    wf = open(osudb_js_path, "w")
-    wf.write("var osuLoaded = true;\n\n")
-    wf.write("var osudbJsLoaded = true;\n\n")
-    wf.write(f'var osuLoadTime = "{get_time_str(osu_load_time)}";\n\n')
-    wf.write(f'var osuSongsPath = {json.dumps("file://"+osu_songs_path)};\n\n')
-    wf.write(f"var osuSongs = {json.dumps(get_songs(osu_data.beatmaps))};\n\n")
-    wf.write(f"var osuCollections = {json.dumps(get_collections(osu_data.beatmaps, collection_data.collections))};\n")
-    wf.close()
+    print("Dump db to json to osudb.js...")
+    with open(osudb_js_path, "w") as file:
+        file.write("var osuLoaded = true;\n\n")
+        file.write("var osudbJsLoaded = true;\n\n")
+        file.write(f'var osuLoadTime = "{get_time_str(osu_load_time)}";\n\n')
+        file.write(f'var osuSongsPath = {json.dumps("file://"+osu_songs_path)};\n\n')
+        file.write(f"var osuSongs = {json.dumps(get_songs(osu_data.beatmaps))};\n\n")
+        file.write(f"var osuCollections = {json.dumps(get_collections(osu_data.beatmaps, collection_data.collections))};\n")
+
+    pls_col = [col for col in collection_data.collections if col.name.value == pls_collection_name]
+    if pls_col:
+        print()
+        print("Dump collection to pls to osu_music.pls...")
+        songs = get_songs_from_md5(get_md5_to_song_dict(osu_data.beatmaps), pls_col[0].beatmaps_md5s)
+        with PLSWriter(pls_path, "w", encoding="utf-8", pretty_blank=True) as pls:
+            for song in songs:
+                full_path = f'{osu_songs_path}/{song["folder"]}/{song["file"]}'
+                pls.write(full_path, song["title"], song["time"])
+    
+    print()
     input("Done!")
