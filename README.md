@@ -30,7 +30,7 @@ Mac OSX: /Applications/osu!.app/Contents/Resources/drive_c/Program Files/osu!/
 
 A very simple html music player using Python to convert db to js.
 
-It can also convert a collection to a .pls playlist file, playable by many music players.
+It can also convert a collection to a .pls / .m3u8 playlist file, playable by many music players.
 
 ## How to use
 
