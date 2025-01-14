@@ -9,7 +9,7 @@ meta:
   encoding: UTF-8
   endian: le
 doc: osu!.db file format in rhythm game, osu!.
-doc-ref: https://osu.ppy.sh/wiki/zh-tw/osu%21_File_Formats/Db_%28file_format%29
+doc-ref: https://github.com/ppy/osu/wiki/Legacy-database-file-structure
 seq:
   - id: osu_version
     type: s4
@@ -213,12 +213,12 @@ types:
       - id: timing_points
         type: timing_points
         doc: Timing point+, An Int indicating the number of following Timing points, then the aforementioned Timing points.
+      - id: difficulty_id
+        type: s4
+        doc: Int, Difficulty ID
       - id: beatmap_id
         type: s4
         doc: Int, Beatmap ID
-      - id: beatmap_set_id
-        type: s4
-        doc: Int, Beatmap set ID
       - id: thread_id
         type: s4
         doc: Int, Thread ID

@@ -23,11 +23,12 @@ def list_folders(path):
 
 
 def get_song_from_beatmap(beatmap):
+    # beatmapsets/348801 has trailing space in DB, but not in actual folder name
     return {
         "artist": beatmap.artist_name.value,
         "title": beatmap.song_title.value,
         "file": beatmap.audio_file_name.value,
-        "folder": beatmap.folder_name.value,
+        "folder": beatmap.folder_name.value.rstrip(" "),
         "time": beatmap.total_time
     }
 
@@ -66,7 +67,13 @@ def get_songs_from_md5(md5_to_song_dict, md5_list):
     folder_set = set()
     res = []
     for md5 in md5_list:
-        song = md5_to_song_dict[md5.value]
+        song = md5_to_song_dict.get(md5.value)
+        if song is None:
+            # Some md5s in collections are not found in ver20220424 DB,
+            # but all songs are still included in output json.
+            # Not knowing why. Kaitai Struct is parsing the DB correctly. This is just weird.
+            print("MD5 not found:", md5.value)
+            continue
         if song["folder"] in folder_set:
             continue
         folder_set.add(song["folder"])
@@ -79,9 +86,11 @@ def get_collections(beatmaps, collections):
     Convert collections md5 to song.
     """
     md5_to_songs = get_md5_to_song_dict(beatmaps)
-    return [
-        [col.name.value, get_songs_from_md5(md5_to_songs, col.beatmaps_md5s)]
-        for col in collections]
+    res = []
+    for col in collections:
+        print("Collection:", col.name.value)
+        res.append([col.name.value, get_songs_from_md5(md5_to_songs, col.beatmaps_md5s)])
+    return res
 
 
 def get_current_time():
@@ -166,13 +175,17 @@ if __name__ == "__main__":
     copy_db_path = r"./user_data/copied_osu_db"
     osudb_js_path = r"./user_data/osudb.js"
     pls_path = r"./user_data/osu_music.pls"  # the common .pls playlist format
-    m3u_path = r"./user_data/osu_music.m3u8"  # the M3U playlist format
+    m3u_path = r"./user_data/osu_music.m3u8"  # the M3U playlist format (deprecated)
 
     # the osu collection to be converted to playlist, None/False/""/0 to skip
     playlist_collection_name = r"FavoriteMusic"
     playlist_shuffle = False
 
-    import os, shutil, json, datetime, random
+    import os
+    import json
+    import random
+    import shutil
+    import datetime
 
     pjoin = os.path.join  # shortcut
 
@@ -231,7 +244,7 @@ if __name__ == "__main__":
 
     print()
     print("Folders not in osu!.db:")
-    db_folder_names = {bm.folder_name.value for bm in osu_data.beatmaps}
+    db_folder_names = {bm.folder_name.value.rstrip(" ") for bm in osu_data.beatmaps}
     for i in sorted(set(list_folders(osu_songs_path)) - db_folder_names):
         print(i)
 
@@ -271,12 +284,12 @@ if __name__ == "__main__":
                 full_path = f'{osu_songs_path}/{song["folder"]}/{song["file"]}'
                 file.write(full_path, song["title"], "%.3f" % (song["time"] / 1000))
 
-        print()
-        print(f"Dump collection to m3u to {os.path.basename(m3u_path)}...")
-        with M3UWriter(m3u_path, "w", encoding="utf-8", pretty_blank=True) as file:
-            for song in songs:
-                full_path = f'{osu_songs_path}/{song["folder"]}/{song["file"]}'
-                file.write(full_path, song["title"], "%.3f" % (song["time"] / 1000))
+        # print()
+        # print(f"Dump collection to m3u to {os.path.basename(m3u_path)}...")
+        # with M3UWriter(m3u_path, "w", encoding="utf-8", pretty_blank=True) as file:
+        #     for song in songs:
+        #         full_path = f'{osu_songs_path}/{song["folder"]}/{song["file"]}'
+        #         file.write(full_path, song["title"], "%.3f" % (song["time"] / 1000))
 
     print()
     input("Done!")

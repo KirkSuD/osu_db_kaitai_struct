@@ -9,7 +9,7 @@ meta:
   encoding: UTF-8
   endian: le
 doc: scores.db file format in rhythm game, osu!.
-doc-ref: https://osu.ppy.sh/wiki/zh-tw/osu%21_File_Formats/Db_%28file_format%29
+doc-ref: https://github.com/ppy/osu/wiki/Legacy-database-file-structure
 seq:
   - id: version
     type: s4
