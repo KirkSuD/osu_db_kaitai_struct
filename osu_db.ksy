@@ -95,11 +95,11 @@ types:
     seq:
       - id: magic1
         contents: [0x08]
-      - id: int
+      - id: mods
         type: u4
       - id: magic2
         contents: [0x0c]
-      - id: float
+      - id: rating
         type: f4
   int_float_pairs:
     doc: An Int indicating the number of following Int-Float pairs, then the aforementioned pairs.
@@ -116,11 +116,11 @@ types:
     seq:
       - id: magic1
         contents: [0x08]
-      - id: int
+      - id: mods
         type: u4
       - id: magic2
         contents: [0x0d]
-      - id: double
+      - id: rating
         type: f8
   int_double_pairs:
     doc: An Int indicating the number of following Int-Double pairs, then the aforementioned pairs.
@@ -266,6 +266,7 @@ types:
           cases:
             true: int_double_pairs
             false: int_float_pairs
+        if: _root.osu_version >= 20140609
         doc: |
           Int-Float pair*, Star Rating info for CTB, in each pair,
           the Int is the mod combination, and the Float is the Star Rating.

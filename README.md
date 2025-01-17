@@ -1,80 +1,85 @@
 # Osu DB Kaitai Struct
 
-A simple [osu!](https://osu.ppy.sh) parser written in [Kaitai Struct](https://kaitai.io/).
+Rhythm game [osu!](https://osu.ppy.sh) [database](https://github.com/ppy/osu/wiki/Legacy-database-file-structure) parser & serializer.  
+(For the old *stable* client, not lazer.)  
+(Files: `osu!.db`, `collection.db`, `scores.db`)
 
-Version: 0.1  
-Written by: KirkSuD  
-Project started @ 2021/01/03  
-Last update @ 2021/05/04  
-Current found bugs: None
+## Parser
 
-It is written according to [the osu! wiki page](https://osu.ppy.sh/help/wiki/osu!_File_Formats/Db_(file_format)).  
-Currently, there are 4 databases: osu!.db, scores.db, collection.db, and presence.db.  
-But presence.db is not described on the wiki page and is not supported.
+Parser is written in [Kaitai Struct](https://kaitai.io/) `.ksy` yaml file according to [osu wiki page](https://github.com/ppy/osu/wiki/Legacy-database-file-structure),  
+then transpiled to many programming languages.
 
-Last test: Roughly tested @ 2021/05/04
- with osu!.db ver.20210423, collection.db ver.20210423, scores.db ver.20190828.
+Precompiled code is released. (Version is the version of osu!.)  
+To compile manually, [install `kaitai-struct-compiler`](https://kaitai.io/#download),  
+then run `kaitai-struct-compiler --target all --outdir ./osu_db_kaitai *.ksy`.
 
-osu! directory path:  
-Windows: %localappdata%/osu!  
-Mac OSX: /Applications/osu!.app/Contents/Resources/drive_c/Program Files/osu!/
-
-## Requirements
-
-* None. Download latest release from the release folder. Then pick the language you like! :)
-* Oh. But you may still have to install Kaitai runtime for your chosen language.
-
-## Apps
-
-### Simple player
-
-A very simple html music player using Python to convert db to js.
-
-It can also convert a collection to a .pls / .m3u8 playlist file, playable by many music players.
-
-## How to use
-
-Take Python as an example:
-
+Some languages need runtime library to run the compiled parser.  
+Please refer to [Kaitai Struct documentation](https://doc.kaitai.io/).  
+For example, Python: `pip install kaitaistruct`
 ```py
 from osu_db import OsuDb
 osu_data = OsuDb.from_file(osu_db_path)
-print(osu_data.osu_version)
+print(osu_data.osu_version)  # 20250108
 ```
 
-Yes, it's that easy, yet cross-language. Thanks to Kaitai Struct.
-
-But, I wrote Bool & String as user-defined types; so you have to use `.value` to access real value of Bool or String object. Maybe I'll fix it later...
-
+Bool & String are user-defined types. Use `.value` to access.
 ```py
->>> scores_data.beatmaps[0].md5_hash
-<osu_scores.OsuScores.String object at 0x00000237D85D4160>
->>> scores_data.beatmaps[0].md5_hash.value
-'3c8b50ebd123458beb39160c6aaf148c'
 >>> scores_data.beatmaps[0].scores[0].perfect_combo
-<osu_scores.OsuScores.Bool object at 0x00000237D85D43A0>
+<osu_scores.OsuScores.Bool object at 0x...>
 >>> scores_data.beatmaps[0].scores[0].perfect_combo.value
 True
 ```
 
-## How it works
+## Serializer
 
-Write binary format in Kaitai's `.ksy` file, then transpile to real programming languages.
+I compiled `.ksy` to [Python Construct](https://github.com/construct/construct),  
+then edited the code manually to make it work.
 
-## TODO
+This is the best solution I know.  
+As of this writing, Kaitai Struct's compiled code for Python Construct is not good.  
+It's missing some things, and the [CI test rating](https://ci.kaitai.io/) for Construct is <50%.  
+Another possible solution is to use the [experimental serialization feature](https://doc.kaitai.io/serialization.html) (Python & Java),  
+but it's immature, not included in released compiler, still in its own branch.
 
-* Remove the need of `.value`; or, prove it's needed.
+To use Construct, which can both parse and serialize,
+download/clone this repo (get the `osu_db_construct` folder),  
+`pip install construct`,  
+```py
+from osu_db import osu_db
+osu_data = osu_db.parse_file(osu_db_path)
+print(osu_data.osu_version)  # 20250108
+osu_binary_data = osu_db.build(osu_data)
+```
+
+Types are more "flat", `.value` is no longer needed,  
+because I wrote [`Adapter`s](https://construct.readthedocs.io/en/latest/adapters.html) to handle them:
+```py
+>>> scores_data.beatmaps[0].scores[0].perfect_combo  # no `.value`
+True
+>>> osu_data.beatmaps[0].star_rating_osu  # no `.pairs`
+[...]
+```
+
+When serializing, you don't have to specify list length like `num_beatmaps`,  
+`ArrayAdapter` sets it for you behind the scene. Example:  
+```py
+collection_binary = osu_collection.build(dict(
+    version=20250108,
+    collections=[dict(
+        name="my collection",
+        beatmaps_md5s=["deadbeefcafebabe"]
+    )]
+))  # no `num_collections`
+```
+
+## Playlist Converter
+
+A CLI playlist converter `playlist.py` is included in `osu_db_construct`.  
+By default, it converts all collections to `.pls` playlist files,  
+saving to `osu_collection_playlist` folder.  
+`python playlist.py -h` to see all options. (`.m3u8` is also supported.)
 
 ## Bugs
 
-Currently, there are no bugs found.  
-It parsed the DBs successfully on my computer.
-
-However, the databases' format may change, and the current parsing method may fail.  
-If you find any bug, please inform me.  
-If you think the code can be better, tell me how to do it.  
-Or, even better, send me a PR with better code. :)
-
-## Thanks to
-
-* You for testing and using this open source project.
+If you found something wrong, maybe the [DB structure](https://github.com/ppy/osu/wiki/Legacy-database-file-structure) changed,  
+please create an issue to let me know.
