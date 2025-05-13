@@ -4,6 +4,10 @@ Rhythm game [osu!](https://osu.ppy.sh) [database](https://github.com/ppy/osu/wik
 (For the old *stable* client, not lazer.)  
 (Files: `osu!.db`, `collection.db`, `scores.db`)
 
+## Archived
+
+Last update is for v20250108, last tested on v20250401.
+
 ## Parser
 
 Parser is written in [Kaitai Struct](https://kaitai.io/) `.ksy` yaml file according to [osu wiki page](https://github.com/ppy/osu/wiki/Legacy-database-file-structure),  
@@ -41,7 +45,7 @@ It's missing some things, and the [CI test rating](https://ci.kaitai.io/) for Co
 Another possible solution is to use the [experimental serialization feature](https://doc.kaitai.io/serialization.html) (Python & Java),  
 but it's immature, not included in released compiler, still in its own branch.
 
-To use Construct, which can both parse and serialize,
+To use Construct, which can both parse and serialize,  
 download/clone this repo (get the `osu_db_construct` folder),  
 `pip install construct`,  
 ```py
